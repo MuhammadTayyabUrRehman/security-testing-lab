@@ -1,0 +1,246 @@
+===============================================================================
+SECURITY TESTING LAB - INSTALLATION & SETUP GUIDE
+Vulnerability Identification and Risk Assessment
+===============================================================================
+
+PROJECT OVERVIEW
+================
+This is an intentionally vulnerable web application designed for educational
+purposes to demonstrate OWASP Top 10 security vulnerabilities and testing
+methodologies. This application should NEVER be used in production environments.
+
+System Requirements
+===================
+- Windows 10/11 or Windows Server 2016+
+- Python 3.8 or higher
+- pip (Python Package Manager)
+- Any modern web browser (Chrome, Firefox, Edge, Safari)
+- At least 100MB free disk space
+
+INSTALLATION STEPS
+==================
+
+Step 1: Verify Python Installation
+-----------------------------------
+Open PowerShell and run:
+
+    python --version
+
+Expected output: Python 3.x.x
+
+If Python is not found, download from: https://www.python.org/downloads/
+During installation, CHECK "Add Python to PATH"
+
+
+Step 2: Navigate to Project Directory
+--------------------------------------
+In PowerShell, navigate to the project folder:
+
+    cd "c:\Local Disk (D)\Semester Resources\semester 6\V&V Lab\lab 10\security-testing-lab"
+
+
+Step 3: Create Virtual Environment (Recommended)
+-------------------------------------------------
+Create an isolated Python environment:
+
+    python -m venv venv
+
+Activate the virtual environment:
+
+    .\venv\Scripts\Activate.ps1
+
+If you get an execution policy error, run:
+
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Then try activating again.
+
+
+Step 4: Install Dependencies
+------------------------------
+Install required packages:
+
+    pip install -r requirements.txt
+
+Expected output:
+    Successfully installed Flask-2.3.2 Werkzeug-2.3.6
+
+Verify installation:
+
+    pip list
+
+You should see Flask and Werkzeug in the list.
+
+
+RUNNING THE APPLICATION
+========================
+
+Step 1: Activate Virtual Environment (if not already active)
+-------------------------------------------------------------
+In the project directory, run:
+
+    .\venv\Scripts\Activate.ps1
+
+You should see (venv) at the beginning of your PowerShell prompt.
+
+
+Step 2: Start the Flask Application
+------------------------------------
+Run the application:
+
+    python app.py
+
+Expected output:
+    * Running on http://127.0.0.1:5000
+    * Debug mode: on
+    WARNING in flask.app: This is a development server. Do not use it in 
+      production. Use a production WSGI server instead.
+    * Press CTRL+C to quit
+
+
+Step 3: Access the Application
+--------------------------------
+Open your web browser and navigate to:
+
+    http://127.0.0.1:5000
+
+or
+
+    http://localhost:5000
+
+You should see the login page.
+
+
+STOPPING THE APPLICATION
+==========================
+To stop the Flask server, press in the PowerShell terminal:
+
+    CTRL+C
+
+You should see:
+    KeyboardInterrupt
+
+
+DEACTIVATING VIRTUAL ENVIRONMENT
+==================================
+After you're done, deactivate the virtual environment:
+
+    deactivate
+
+The (venv) prefix should disappear from your prompt.
+
+
+TROUBLESHOOTING
+===============
+
+Problem: "python: command not found"
+Solution: 
+- Python is not in your PATH
+- Reinstall Python and ensure "Add Python to PATH" is checked
+- Or use full path: C:\Python312\python.exe app.py (adjust version)
+
+Problem: "ModuleNotFoundError: No module named 'flask'"
+Solution:
+- Ensure virtual environment is activated: .\venv\Scripts\Activate.ps1
+- Run: pip install flask
+
+Problem: "Address already in use"
+Solution:
+- Another application is using port 5000
+- Find the process: netstat -ano | findstr 5000
+- Or use different port: Change port=5000 to port=5001 in app.py
+
+Problem: Browser shows "Unable to connect"
+Solution:
+- Ensure Flask server is running
+- Try different URL: http://localhost:5000 or http://127.0.0.1:5000
+- Check firewall isn't blocking port 5000
+
+Problem: "Permission denied" when activating venv
+Solution:
+- Run PowerShell as Administrator
+- Or run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+
+PROJECT STRUCTURE
+=================
+
+security-testing-lab/
+│
+├── app.py                    # Main Flask application with all routes
+├── requirements.txt          # Python dependencies
+├── INSTALL.txt              # This installation guide
+├── TESTING.txt              # Testing instructions and scenarios
+│
+├── templates/
+│   ├── login.html           # Login page (weak authentication)
+│   ├── dashboard.html       # Dashboard after login
+│   └── search.html          # Search feature (XSS vulnerability)
+│
+└── static/                  # Static files (CSS, JS, images) - empty for lab
+
+
+SECURITY DISCLAIMER
+===================
+⚠️  WARNING ⚠️
+
+This application contains INTENTIONAL SECURITY VULNERABILITIES.
+
+DO NOT:
+- Deploy to production environments
+- Expose to the internet
+- Use for any real-world applications
+- Store sensitive data
+
+USE ONLY:
+- Educational and training purposes
+- Local/isolated lab environments
+- Security testing and vulnerability assessment training
+- Understanding OWASP vulnerabilities
+
+The vulnerabilities include:
+- Weak Authentication (plaintext passwords, no hashing)
+- Broken Access Control (no authorization checks)
+- Injection Vulnerabilities (XSS, SQL injection)
+- Weak Session Management (weak secret key)
+- Improper Input Validation (no sanitization)
+
+This is NOT production-ready code and should never be used as a reference
+for secure application development.
+
+
+QUICK START SUMMARY
+===================
+
+1. Open PowerShell
+2. cd "c:\Local Disk (D)\Semester Resources\semester 6\V&V Lab\lab 10\security-testing-lab"
+3. .\venv\Scripts\Activate.ps1
+4. pip install -r requirements.txt
+5. python app.py
+6. Open http://127.0.0.1:5000 in browser
+7. Login with: admin / admin123
+
+For detailed testing instructions, see TESTING.txt
+
+
+ADDITIONAL RESOURCES
+====================
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+- Flask Documentation: https://flask.palletsprojects.com/
+- Python Security: https://python.readthedocs.io/en/latest/library/security_warnings.html
+- OWASP Testing Guide: https://owasp.org/www-project-web-security-testing-guide/
+
+
+SUPPORT
+=======
+For issues or questions:
+1. Check TESTING.txt for testing instructions
+2. Review the inline comments in app.py
+3. Check Flask documentation
+4. Review OWASP resources
+
+===============================================================================
+Last Updated: May 2026
+Version: 1.0
+Educational Purpose Only
+===============================================================================

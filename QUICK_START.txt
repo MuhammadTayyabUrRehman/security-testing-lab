@@ -1,0 +1,319 @@
+===============================================================================
+QUICK REFERENCE - SECURITY TESTING LAB
+===============================================================================
+
+PROJECT DIRECTORY:
+c:\Local Disk (D)\Semester Resources\semester 6\V&V Lab\lab 10\security-testing-lab
+
+===============================================================================
+INSTALLATION (5 STEPS)
+===============================================================================
+
+Step 1: Open PowerShell and navigate to project:
+    cd "c:\Local Disk (D)\Semester Resources\semester 6\V&V Lab\lab 10\security-testing-lab"
+
+Step 2: Create and activate virtual environment:
+    python -m venv venv
+    .\venv\Scripts\Activate.ps1
+
+Step 3: Install dependencies:
+    pip install requirements.txt
+
+Step 4: Run the application:
+    python app.py
+
+Step 5: Open browser:
+    http://127.0.0.1:5000
+
+
+===============================================================================
+TEST CREDENTIALS
+===============================================================================
+
+Account 1 (Admin):
+    Username: admin
+    Password: admin123
+
+Account 2 (User):
+    Username: user
+    Password: password
+
+
+===============================================================================
+MAIN ROUTES & VULNERABILITIES
+===============================================================================
+
+Login Page:
+    URL: http://127.0.0.1:5000/login
+    Vulnerability: Weak Authentication, No Lockout, Plaintext Passwords
+    Severity: HIGH
+
+Dashboard:
+    URL: http://127.0.0.1:5000/dashboard
+    Status: Properly Protected (No Vulnerability)
+    Note: Requires login
+
+Search Feature:
+    URL: http://127.0.0.1:5000/search?q=QUERY
+    Vulnerability: Reflected XSS (Direct Input Reflection)
+    Severity: HIGH
+    Test: /search?q=<script>alert('XSS')</script>
+
+Profile Page:
+    URL: http://127.0.0.1:5000/profile?id=ID
+    Vulnerability: Broken Access Control (No Authorization)
+    Severity: CRITICAL
+    Test: /profile?id=1 (view admin profile as regular user)
+
+Logout:
+    URL: http://127.0.0.1:5000/logout
+    Status: Properly Implemented (No Vulnerability)
+
+
+===============================================================================
+QUICK VULNERABILITY TESTS
+===============================================================================
+
+Test 1 - XSS (Reflected):
+    Go to: /search?q=<img src=x onerror=alert('XSS')>
+    Expected: Alert box appears
+
+Test 2 - Broken Access Control:
+    Login as 'user'
+    Visit: /profile?id=1
+    Expected: Can view admin's profile (should not be allowed)
+
+Test 3 - Weak Authentication:
+    Try to login with wrong password multiple times
+    Expected: No account lockout, unlimited attempts possible
+
+Test 4 - Plaintext Passwords:
+    Open app.py and search for "USERS = {"
+    Expected: Passwords visible in plaintext
+
+Test 5 - Weak Secret Key:
+    Open app.py and search for "secret_key"
+    Expected: Simple, guessable key string
+
+
+===============================================================================
+FILE DESCRIPTIONS
+===============================================================================
+
+app.py
+    - Main Flask application
+    - Contains all routes and logic
+    - Includes intentional vulnerabilities with comments
+    - ~300 lines
+
+login.html
+    - User login form
+    - Displays test credentials
+    - Shows error messages
+    - ~150 lines
+
+dashboard.html
+    - Main user dashboard
+    - Navigation to features
+    - Feature explanations
+    - ~200 lines
+
+search.html
+    - Search feature interface
+    - XSS vulnerability demo
+    - Vulnerability explanation
+    - ~250 lines
+
+requirements.txt
+    - Lists Python package dependencies
+    - Flask and Werkzeug versions
+
+README.md
+    - Complete project documentation
+    - Vulnerability details
+    - Installation instructions
+    - Testing guide summary
+
+INSTALL.txt
+    - Detailed installation guide
+    - Troubleshooting
+    - System requirements
+
+TESTING.txt
+    - Comprehensive test cases (50+)
+    - OWASP mapping
+    - Attack scenarios
+    - Remediation guidance
+
+
+===============================================================================
+OWASP TOP 10 VULNERABILITIES IN THIS APP
+===============================================================================
+
+✗ A01:2021 - Broken Access Control (CRITICAL)
+  Location: /profile endpoint
+  Issue: No authorization checks
+
+✗ A02:2021 - Cryptographic Failures (CRITICAL)
+  Location: USERS dictionary
+  Issue: Plaintext passwords
+
+✗ A03:2021 - Injection (HIGH)
+  Location: /search endpoint
+  Issue: Reflected XSS in query parameter
+
+✗ A05:2021 - Security Misconfiguration (HIGH)
+  Location: app.secret_key
+  Issue: Weak session secret key
+
+✗ A07:2021 - Identification and Authentication Failures (HIGH)
+  Location: /login endpoint
+  Issues: No account lockout, weak credentials, no MFA
+
+
+===============================================================================
+STOPPING THE APPLICATION
+===============================================================================
+
+To stop Flask server:
+    Press CTRL+C in the PowerShell terminal
+
+To exit virtual environment:
+    Type: deactivate
+
+
+===============================================================================
+COMMON ISSUES & FIXES
+===============================================================================
+
+Issue: "flask command not found"
+Fix: Activate virtual environment first: .\venv\Scripts\Activate.ps1
+
+Issue: "Address already in use"
+Fix: Change port in app.py or stop process on port 5000
+
+Issue: "Permission denied" on venv activation
+Fix: Run PowerShell as Administrator or run:
+     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Issue: Browser shows "Unable to connect"
+Fix: Ensure Flask is running and try http://localhost:5000
+
+Issue: Template not found errors
+Fix: Ensure templates folder is in same directory as app.py
+
+
+===============================================================================
+DETAILED DOCUMENTATION
+===============================================================================
+
+For complete details, see:
+
+1. INSTALL.txt - Full installation guide with troubleshooting
+2. TESTING.txt - 50+ test cases with expected results
+3. README.md - Project overview and vulnerability analysis
+4. app.py - Well-commented source code
+
+
+===============================================================================
+LEARNING OBJECTIVES
+===============================================================================
+
+After completing this lab, students should be able to:
+
+✓ Identify common web application vulnerabilities
+✓ Recognize OWASP Top 10 security risks
+✓ Perform security testing on web applications
+✓ Document security findings professionally
+✓ Understand vulnerability impact and exploitation
+✓ Apply remediation strategies to fix vulnerabilities
+✓ Develop secure coding practices
+✓ Use security testing tools and techniques
+
+
+===============================================================================
+IMPORTANT SECURITY DISCLAIMER
+===============================================================================
+
+⚠️  THIS APPLICATION IS INTENTIONALLY VULNERABLE ⚠️
+
+DO NOT:
+- Deploy to production or internet
+- Use with real data
+- Share with unauthorized users
+- Use as reference for real application code
+- Use techniques on systems you don't own (without permission)
+
+USE ONLY FOR:
+- Educational and training purposes
+- Laboratory environments
+- Security testing practice
+- Academic coursework and research
+
+
+===============================================================================
+SUBMISSION CHECKLIST
+===============================================================================
+
+Before submitting, verify:
+
+[ ] All files are present and in correct directory
+[ ] app.py has all required routes
+[ ] HTML templates are properly formatted
+[ ] Application runs without errors
+[ ] Both test accounts work
+[ ] Search feature shows XSS vulnerability
+[ ] Profile shows access control vulnerability
+[ ] All documentation files are included
+[ ] Project is ready for academic submission
+
+Project Location:
+✓ c:\Local Disk (D)\Semester Resources\semester 6\V&V Lab\lab 10\security-testing-lab
+
+
+===============================================================================
+GETTING HELP
+===============================================================================
+
+1. Installation issues → See INSTALL.txt
+2. Testing questions → See TESTING.txt
+3. Code details → See README.md
+4. Specific routes → See app.py comments
+5. HTML issues → See templates/ folder files
+6. OWASP info → Visit https://owasp.org
+
+
+===============================================================================
+QUICK COMMAND REFERENCE
+===============================================================================
+
+Navigate to project:
+    cd "c:\Local Disk (D)\Semester Resources\semester 6\V&V Lab\lab 10\security-testing-lab"
+
+Create venv:
+    python -m venv venv
+
+Activate venv:
+    .\venv\Scripts\Activate.ps1
+
+Install packages:
+    pip install -r requirements.txt
+
+Run app:
+    python app.py
+
+Check installed packages:
+    pip list
+
+Deactivate venv:
+    deactivate
+
+Stop Flask (in terminal):
+    CTRL+C
+
+
+===============================================================================
+Version: 1.0
+Last Updated: May 17, 2026
+Status: Ready for Submission
+===============================================================================

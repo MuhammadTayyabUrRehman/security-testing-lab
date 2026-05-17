@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Security Testing Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .header-info {
+            text-align: right;
+        }
+
+        .header-info .username {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ff3838;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .welcome-message {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .welcome-message p {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .welcome-message .username {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .feature-card h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .feature-card:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .feature-card:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .feature-card a {
+            display: inline-block;
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .feature-card a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .info-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .info-box strong {
+            color: #856404;
+        }
+
+        .info-box p {
+            color: #856404;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🛡️ Dashboard</h1>
+            </div>
+            <div class="header-info">
+                <div class="username">Welcome, {{ username }}!</div>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="welcome-message">
+                <p>You are logged in as: <span class="username">{{ username }}</span></p>
+                <p style="font-size: 14px; margin-top: 8px; color: #666;">
+                    This dashboard provides access to various lab features for security testing.
+                </p>
+            </div>
+
+            <h2>Lab Features</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <h3>🔍 Search Feature</h3>
+                    <p>Test input validation and reflection vulnerabilities</p>
+                    <a href="/search">Go to Search</a>
+                </div>
+
+                <div class="feature-card">
+                    <h3>👤 User Profiles</h3>
+                    <p>Explore parameter manipulation and access control</p>
+                    <a href="/profile?id=1">View Profile 1</a>
+                </div>
+
+                <div class="feature-card">
+                    <h3>📚 Lab Guide</h3>
+                    <p>View testing scenarios and vulnerability documentation</p>
+                    <a href="#" onclick="showGuide();">View Guide</a>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>ℹ️ Security Testing Note:</strong>
+                <p>This application is intentionally vulnerable for educational purposes.</p>
+                <p>Use this dashboard to explore and identify security weaknesses as part of your lab exercises.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showGuide() {
+            alert(`
+Security Testing Lab - Feature Guide
+
+1. SEARCH FEATURE (/search)
+   - Tests: Cross-Site Scripting (XSS)
+   - Try: /search?q=<script>alert('XSS')</script>
+   - Try: /search?q=<img src=x onerror=alert('XSS')>
+
+2. PROFILE PAGE (/profile)
+   - Tests: Broken Access Control
+   - Try: /profile?id=1 (View admin profile)
+   - Try: /profile?id=2 (View user profile)
+   - Try: /profile?id=999 (Non-existent user)
+   - Notice: No authorization check - any user can view any profile
+
+3. LOGIN PAGE (/login)
+   - Tests: Weak Authentication
+   - Tests: Default Credentials
+   - Tests: Account Lockout Absence
+   - Try: Multiple failed login attempts (no lockout)
+
+4. SESSION MANAGEMENT
+   - Tests: Session Security
+   - Weak secret key used for session tokens
+   - Try: Direct access to /dashboard without login (redirects)
+
+Available Test Accounts:
+- admin / admin123
+- user / password
+            `);
+        }
+    </script>
+</body>
+</html>

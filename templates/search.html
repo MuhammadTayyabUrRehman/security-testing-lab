@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Security Testing Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #764ba2;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-form {
+            margin-bottom: 30px;
+        }
+
+        .search-form label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-container button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .search-container button:hover {
+            transform: translateY(-2px);
+        }
+
+        .results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .result-content {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #333;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .vulnerability-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .vulnerability-info h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .vulnerability-info p {
+            color: #856404;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+
+        .vulnerability-info code {
+            background: #fff8e1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .test-examples {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-examples h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .test-examples p {
+            color: #333;
+            font-size: 14px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 8px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Search Feature</h1>
+            <div class="nav-links">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="search-form">
+                <label for="query">Enter Search Query:</label>
+                <div class="search-container">
+                    <input type="text" id="query" name="q" placeholder="Type something to search..." value="{{ request.args.get('q', '') }}">
+                    <button onclick="performSearch()">Search</button>
+                </div>
+            </div>
+
+            <div class="results">
+                <h2>Search Results:</h2>
+                <div class="result-content">
+                    <!-- INTENTIONAL VULNERABILITY: Direct reflection without sanitization -->
+                    {{ result | safe }}
+                </div>
+            </div>
+
+            <div class="vulnerability-info">
+                <h3>⚠️ Security Note - Reflected XSS Vulnerability</h3>
+                <p><strong>Vulnerability Type:</strong> Cross-Site Scripting (XSS) - Reflected</p>
+                <p><strong>Description:</strong> This search feature directly reflects user input in the HTML response without any sanitization or escaping. This allows attackers to inject malicious scripts.</p>
+                <p><strong>OWASP Category:</strong> A03:2021 – Injection</p>
+                <p><strong>Impact:</strong> An attacker can inject JavaScript code that executes in the victim's browser, potentially stealing session cookies, redirecting to phishing sites, or performing unauthorized actions.</p>
+            </div>
+
+            <div class="test-examples">
+                <h3>🧪 Test Cases (Reflected XSS)</h3>
+                <p>Try: <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></p>
+                <p>Try: <code>&lt;img src=x onerror=alert('XSS')&gt;</code></p>
+                <p>Try: <code>&lt;svg onload=alert('XSS')&gt;</code></p>
+                <p>Try: <code>'&gt;&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></p>
+                <p><strong>Expected Result:</strong> Script will execute and display alert box or access browser objects</p>
+            </div>
+
+            <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        function performSearch() {
+            const query = document.getElementById('query').value;
+            if (query.trim() !== '') {
+                window.location.href = '/search?q=' + encodeURIComponent(query);
+            }
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('query').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>
